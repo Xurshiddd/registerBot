@@ -4,7 +4,7 @@ import pandas as pd
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 TOKEN = '7822132896:AAH7xchOGpgsO3ZWc7lP7iZCd0SB-iq7ZNY'
-CHANNEL_USERNAME = '@ttysi_uz'
+CHANNEL_USERNAME = '@sofislomnuri'
 ADMIN_ID = 898426932  # Admin Telegram ID sini kiriting
 
 bot = telebot.TeleBot(TOKEN)

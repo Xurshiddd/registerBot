@@ -24,19 +24,18 @@ def init_db():
     conn.close()
 
 @bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(message.chat.id, "Assalomu alaykum, \"Bo'lajak yosh muhandislar\" fan olimpiadasining rasmiy telegram botiga xush kelibsiz!")
-    check_subscription(message)
-
 def check_subscription(message):
-    user_status = bot.get_chat_member(CHANNEL_USERNAME, message.chat.id).status
-    if user_status in ['member', 'administrator', 'creator']:
-        ask_region(message)
-    else:
-        markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("✅ A'zo bo'lish", url=f"https://t.me/{CHANNEL_USERNAME[1:]}") )
-        markup.add(InlineKeyboardButton("🔄 Tasdiqlash", callback_data='check_subscription'))
-        bot.send_message(message.chat.id, "Tanlovda ishtirok etish uchun quyidagi telegram kanalga a'zo bo'lish majburiy!", reply_markup=markup)
+    try:
+        user_status = bot.get_chat_member(CHANNEL_USERNAME, message.chat.id).status
+        if user_status in ['member', 'administrator', 'creator']:
+            ask_region(message)
+        else:
+            markup = InlineKeyboardMarkup()
+            markup.add(InlineKeyboardButton("✅ A'zo bo'lish", url=f"https://t.me/{CHANNEL_USERNAME[1:]}"))
+            markup.add(InlineKeyboardButton("🔄 Tasdiqlash", callback_data='check_subscription'))
+            bot.send_message(message.chat.id, "Tanlovda ishtirok etish uchun quyidagi telegram kanalga a'zo bo'lish majburiy!", reply_markup=markup)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Xatolik yuz berdi: {e}")
 
 @bot.callback_query_handler(func=lambda call: call.data == 'check_subscription')
 def verify_subscription(call):

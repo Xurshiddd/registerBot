@@ -7,6 +7,7 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 TOKEN = '7822132896:AAH7xchOGpgsO3ZWc7lP7iZCd0SB-iq7ZNY'
 CHANNEL_USERNAME = '@ttysi_uz'
+CHANNEL_USERNAME2 = '@eduuz'
 ADMIN_IDS = [629384737, 898426931]  # Bir nechta admin ID lar ro'yxati
 
 bot = telebot.TeleBot(TOKEN)
@@ -51,12 +52,14 @@ def check_subscription(message):
     
     try:
         user_status = bot.get_chat_member(CHANNEL_USERNAME, message.chat.id).status
-        if user_status in ['member', 'administrator', 'creator']:
+        user_stat = bot.get_chat_member(CHANNEL_USERNAME2, message.chat.id).status
+        if user_status in ['member', 'administrator', 'creator'] & user_stat in ['member', 'administrator', 'creator']:
             ask_region(message)
             bot.send_message(message.chat.id, "Quyidagi menyudan tanlang:", reply_markup=send_buttons())
         else:
             markup = InlineKeyboardMarkup()
             markup.add(InlineKeyboardButton("✅ A'zo bo'lish", url=f"https://t.me/{CHANNEL_USERNAME[1:]}"))
+            markup.add(InlineKeyboardButton("✅ A'zo bo'lish", url=f"https://t.me/{CHANNEL_USERNAME2[1:]}"))
             markup.add(InlineKeyboardButton("🔄 Tasdiqlash", callback_data='check_subscription'))
             bot.send_message(message.chat.id, "Tanlovda ishtirok etish uchun quyidagi telegram kanalga a'zo bo'lish tavsiya etiladi!", reply_markup=markup)
     except Exception as e:
@@ -65,7 +68,8 @@ def check_subscription(message):
 @bot.callback_query_handler(func=lambda call: call.data == 'check_subscription')
 def verify_subscription(call):
     user_status = bot.get_chat_member(CHANNEL_USERNAME, call.message.chat.id).status
-    if user_status in ['member', 'administrator', 'creator']:
+    user_stat = bot.get_chat_member(CHANNEL_USERNAME2, call.message.chat.id).status
+    if user_status in ['member', 'administrator', 'creator'] & user_stat in ['member', 'administrator', 'creator']:
         bot.edit_message_text("✅ Siz kanalga a'zo bo'lgansiz!", call.message.chat.id, call.message.message_id)
         ask_region(call.message)
     else:
@@ -152,25 +156,37 @@ def send_regulations(message):
     with open("nizom.pdf", 'rb') as file:
         bot.send_document(message.chat.id, file)
 
+
+
+contacts = {
+    "Qoraqalpog‘iston Respublikasi": "Mavlyanov Aybek Palvanbayevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 88-008-82-01",
+    "Andijon viloyati": "Axmedov Jaxongir Adxamovich - ishchi guruh rahbari, Professor\n☎ 93-591-44-22",
+    "Buxoro viloyati": "Arabov Jamoliddin Sadriddinovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 97-441-41-71",
+    "Jizzax viloyati": "Xazratkulov Xamidjon Alikulovich - ishchi guruh rahbari, Bo‘lim boshlig‘i\n☎ 90-357-06-65",
+    "Qashqadaryo viloyati": "Mansurov Mansur Alisherovich - ishchi guruh rahbari, Dekan\n☎ 98-128-33-28",
+    "Navoiy viloyati": "Eshnazarov Dilshod Azamatovich - ishchi guruh rahbari, Assistent\n☎ 94-627-25-93",
+    "Namangan viloyati": "Kadirov Oman Xamidovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 99-307-77-63",
+    "Samarqand viloyati": "Ulukmuradov Abror Nafasovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 97-490-30-72, 98-001-14-72",
+    "Surxondaryo viloyati": "Rasulov Hamza Yuldoshevich - ishchi guruh rahbari, Dotsent\n☎ 90-988-79-63",
+    "Sirdaryo viloyati": "Davlyatov Bekzodjon Aslanxojayevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 94-656-82-01",
+    "Toshkent viloyati>": "Ortiqov Oybek Akbaraliyevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 90-806-59-37",
+    "Farg‘ona viloyati": "Tuychiyev Timur Ortikovich - ishchi guruh rahbari, Dotsent\n☎ 97-747-34-06",
+    "Xorazm viloyati": "Ruzmetov Mansurbek Erkinovich - ishchi guruh rahbari, Dekan\n☎ 90-984-20-18",
+    "Toshkent shahri": "Patxullayev Sarvarjon Ubaydulla o‘g‘li - ishchi guruh rahbari, Dekan\n☎ 90-325-06-06"
+}
+
 @bot.message_handler(func=lambda message: message.text == "Hududiy mas'ullar telefon raqami")
-def send_contact_info(message):
-    contact_info = """
-    1. Qoraqalpog‘iston Respublikasi  Mavlyanov Aybek Palvanbayevich - ishchi guruh rahbari, Kafedra mudiri  88-008-82-01
-    2. Andijon viloyati  Axmedov Jaxongir Adxamovich - ishchi guruh rahbari, Professor  93-591-44-22
-    3. Buxoro viloyati  Arabov Jamoliddin Sadriddinovich - ishchi guruh rahbari, Kafedra mudiri  97-441-41-71
-    4. Jizzax viloyati  Xazratkulov Xamidjon Alikulovich - ishchi guruh rahbari, Bo‘lim boshlig‘i  90-357-06-65
-    5. Qashqadaryo viloyati  Mansurov Mansur Alisherovich - ishchi guruh rahbari, Dekan  98-128-33-28
-    6. Navoiy viloyati  Eshnazarov Dilshod Azamatovich - ishchi guruh rahbari, Assistent  94-627-25-93
-    7. Namangan viloyati  Kadirov Oman Xamidovich - ishchi guruh rahbari, Kafedra mudiri  99-307-77-63
-    8. Samarqand viloyati  Ulukmuradov Abror Nafasovich - ishchi guruh rahbari, Kafedra mudiri  97-490-30-72 98-001-14-72
-    9. Surxondaryo viloyati  Rasulov Hamza Yuldoshevich - ishchi guruh rahbari, Dotsent  90-988-79-63
-    10. Sirdaryo viloyati  Davlyatov Bekzodjon Aslanxojayevich - ishchi guruh rahbari, Kafedra mudiri  94-656-82-01
-    11. Toshkent viloyati  Ortiqov Oybek Akbaraliyevich - ishchi guruh rahbari, Kafedra mudiri   90-806-59-37
-    12. Farg‘ona viloyati  Tuychiyev Timur Ortikovich - ishchi guruh rahbari, Dotsent  97-747-34-06
-    13. Xorazm viloyati  Ruzmetov Mansurbek Erkinovich - ishchi guruh rahbari, Dekan  90-984-20-18
-    14. Toshkent shahri  Patxullayev Sarvarjon Ubaydulla o‘g‘li - ishchi guruh rahbari, Dekan  90-325-06-06
-    """
-    bot.send_message(message.chat.id, contact_info)
+def send_regions(message):
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    buttons = [types.InlineKeyboardButton(text=region, callback_data=region) for region in contacts]
+    markup.add(*buttons)
+    bot.send_message(message.chat.id, "Viloyatni tanlang:", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data in contacts)
+def send_contact(call):
+    contact_info = f"📍 <b>{call.data}</b>\n{contacts[call.data]}"
+    bot.send_message(call.message.chat.id, contact_info, parse_mode="HTML")
+    bot.answer_callback_query(call.id)
 
 @bot.message_handler(func=lambda message: message.text == "Biz bilan bog'lanish")
 def send_contact_number(message):

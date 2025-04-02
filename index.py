@@ -51,7 +51,7 @@ def check_subscription(message):
         return
     
     try:
-        bot.send_message(message.chat.id, " ", reply_markup=send_buttons())
+        bot.send_message(message.chat.id, "keyboard", reply_markup=send_buttons())
         user_status = bot.get_chat_member(CHANNEL_USERNAME, message.chat.id).status
         # user_stat = bot.get_chat_member(CHANNEL_USERNAME2, message.chat.id).status  & user_stat in ['member', 'administrator', 'creator']
         if user_status in ['member', 'administrator', 'creator']:

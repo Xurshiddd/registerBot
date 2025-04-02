@@ -177,8 +177,8 @@ contacts = {
 
 @bot.message_handler(func=lambda message: message.text == "Hududiy mas'ullar telefon raqami")
 def send_regions(message):
-    markup = types.InlineKeyboardMarkup(row_width=2)
-    buttons = [types.InlineKeyboardButton(text=region, callback_data=region) for region in contacts]
+    markup = InlineKeyboardMarkup(row_width=2)
+    buttons = [InlineKeyboardButton(text=region, callback_data=region) for region in contacts]
     markup.add(*buttons)
     bot.send_message(message.chat.id, "Viloyatni tanlang:", reply_markup=markup)
 

@@ -53,8 +53,8 @@ def check_subscription(message):
     try:
         bot.send_message(message.chat.id, "keyboard", reply_markup=send_buttons())
         user_status = bot.get_chat_member(CHANNEL_USERNAME, message.chat.id).status
-        # user_stat = bot.get_chat_member(CHANNEL_USERNAME2, message.chat.id).status  & user_stat in ['member', 'administrator', 'creator']
-        if user_status in ['member', 'administrator', 'creator']:
+        user_stat = bot.get_chat_member(CHANNEL_USERNAME2, message.chat.id).status
+        if user_status in ['member', 'administrator', 'creator'] & user_stat in ['member', 'administrator', 'creator']:
             ask_region(message)
             bot.send_message(message.chat.id, "Quyidagi menyudan tanlang:", reply_markup=send_buttons())
         else:
@@ -69,8 +69,8 @@ def check_subscription(message):
 @bot.callback_query_handler(func=lambda call: call.data == 'check_subscription')
 def verify_subscription(call):
     user_status = bot.get_chat_member(CHANNEL_USERNAME, call.message.chat.id).status
-    # user_stat = bot.get_chat_member(CHANNEL_USERNAME2, call.message.chat.id).status  & user_stat in ['member', 'administrator', 'creator']
-    if user_status in ['member', 'administrator', 'creator']:
+    user_stat = bot.get_chat_member(CHANNEL_USERNAME2, call.message.chat.id).status
+    if user_status in ['member', 'administrator', 'creator'] & user_stat in ['member', 'administrator', 'creator']:
         bot.edit_message_text("✅ Siz kanalga a'zo bo'lgansiz!", call.message.chat.id, call.message.message_id)
         ask_region(call.message)
     else:

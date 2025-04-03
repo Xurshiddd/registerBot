@@ -97,7 +97,7 @@ def ask_district(call):
 def ask_institution(call):
     _, region, district = call.data.split('_')
     markup = InlineKeyboardMarkup()
-    institutions = ["Maktab", "Kollej", "Texnikum"]
+    institutions = ["Maktab", "Kollej", "Texnikum","Litsey"]
     for inst in institutions:
         markup.add(InlineKeyboardButton(inst, callback_data=f'institution_{region}_{district}_{inst}'))
     bot.edit_message_text(f"🏙 Tumani: {district}\n🏫 Muassasani tanlang:", call.message.chat.id, call.message.message_id, reply_markup=markup)

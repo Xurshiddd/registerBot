@@ -1,5 +1,6 @@
 import telebot
 import os
+import re
 import sqlite3
 import pandas as pd
 import tuman  # tuman.py dan tumanlarni olish uchun
@@ -76,22 +77,28 @@ def verify_subscription(call):
     else:
         bot.answer_callback_query(call.id, "❌ Siz hali kanalga a'zo bo'lmagansiz!")
 
-# **Viloyatni tanlash**
+# Viloyatni tanlash
 def ask_region(message):
     markup = InlineKeyboardMarkup()
-    for region in tuman.viloyatlar():  # tuman.py dan viloyatlar olish
+    for region in tuman.viloyatlar():
         markup.add(InlineKeyboardButton(region, callback_data=f'region_{region}'))
-    bot.send_message(message.chat.id, "📍 Viloyatingizni tanlang:", reply_markup=markup)
+    bot.send_message(message.chat.id, "📍 Viloyatingizni tanlang (faqat tugmalar orqali):", reply_markup=markup)
+
+@bot.message_handler(func=lambda message: message.text in tuman.viloyatlar())
+def block_text_region(message):
+    bot.send_message(message.chat.id, "❌ Iltimos, viloyatni faqat tugmalar orqali tanlang!")
 
 # **Tumanni tanlash**
 @bot.callback_query_handler(func=lambda call: call.data.startswith('region_'))
 def ask_district(call):
     region = call.data.split('_')[1]
     markup = InlineKeyboardMarkup()
-    districts = tuman.get_tumanlar(region)  # tuman.py dan tumanni olish
+    districts = tuman.get_tumanlar(region)  
     for district in districts:
         markup.add(InlineKeyboardButton(district, callback_data=f'district_{region}_{district}'))
-    bot.edit_message_text(f"🏙 Viloyat: {region}\n📌 Tumanni tanlang:", call.message.chat.id, call.message.message_id, reply_markup=markup)
+    bot.edit_message_text(f"🏙 Viloyat: {region}\n📌 Tumanni tanlang (faqat tugmalar orqali):", 
+                          call.message.chat.id, call.message.message_id, reply_markup=markup)
+
 # **Muassasani tanlash**
 @bot.callback_query_handler(func=lambda call: call.data.startswith('district_'))
 def ask_institution(call):
@@ -100,20 +107,39 @@ def ask_institution(call):
     institutions = ["Maktab", "Kollej", "Texnikum","Litsey"]
     for inst in institutions:
         markup.add(InlineKeyboardButton(inst, callback_data=f'institution_{region}_{district}_{inst}'))
-    bot.edit_message_text(f"🏙 Tumani: {district}\n🏫 Muassasani tanlang:", call.message.chat.id, call.message.message_id, reply_markup=markup)
+    bot.edit_message_text(f"🏙 Tumani: {district}\n🏫 Muassasani tanlang (faqat tugmalar orqali):", 
+                          call.message.chat.id, call.message.message_id, reply_markup=markup)
 
 # **Ism va familiya kiritish**
 @bot.callback_query_handler(func=lambda call: call.data.startswith('institution_'))
 def ask_name(call):
     _, region, district, institution = call.data.split('_')
-    bot.send_message(call.message.chat.id, "👤 Ism va familiyangizni kiriting:")
-    bot.register_next_step_handler(call.message, ask_phone, region, district, institution)
+    bot.send_message(call.message.chat.id, "👤 Ism va familiyangizni kiriting (faqat matn).")
+    bot.register_next_step_handler(call.message, validate_name, region, district, institution)
+
+def validate_name(message, region, district, institution):
+    if not message.text or any(char.isdigit() for char in message.text):  # Raqam yoki bo'sh matn bo'lsa rad etish
+        bot.send_message(message.chat.id, "❌ Iltimos, faqat harflardan iborat ism kiriting!")
+        bot.register_next_step_handler(message, validate_name, region, district, institution)
+        return
+    ask_phone(message, message.text, region, district, institution)
 
 # **Telefon raqamini kiritish**
 def ask_phone(message, region, district, institution):
     full_name = message.text
-    bot.send_message(message.chat.id, "📞 Telefon raqamingizni kiriting:")
-    bot.register_next_step_handler(message, save_data, full_name, region, district, institution)
+    bot.send_message(message.chat.id, "📞 Telefon raqamingizni kiriting (998XXYYYYYYY shaklida):")
+    bot.register_next_step_handler(message, validate_phone, full_name, region, district, institution)
+
+def validate_phone(message, full_name, region, district, institution):
+    phone = message.text.strip()
+
+    # Regex orqali faqat O'zbekiston telefon raqamlarini tekshirish
+    if not re.match(r'^(?:\+998|998|8)?\d{9}$', phone):
+        bot.send_message(message.chat.id, "❌ Noto‘g‘ri telefon raqami! Iltimos, 998XXYYYYYYY formatida kiriting.")
+        bot.register_next_step_handler(message, validate_phone, full_name, region, district, institution)
+        return
+    
+    save_data(message, full_name, region, district, institution, phone)
 
 # **Ma'lumotlarni saqlash**
 def save_data(message, full_name, region, district, institution):

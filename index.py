@@ -177,13 +177,11 @@ def ask_name(call):
     _, region, district, institution = call.data.split('_')
     bot.send_message(call.message.chat.id, "👤 Ism va familiyangizni kiriting:")
     bot.register_next_step_handler(call.message, ask_phone, region, district, institution) #
-# Telefon raqami formatini tekshirish
-import re
 
 # Telefon raqami formatini tekshirish
 def is_valid_phone(phone):
     # Telefon raqami uchun umumiy regex (O'zbekistondagi raqamlar uchun)
-    phone_pattern = re.compile(r'^\+?998\d{9}$')  # O'zbekistondagi telefon raqamiga moslashgan format
+    phone_pattern = re.compile(r'^\+998\d{9}$')  # O'zbekistondagi telefon raqamiga moslashgan format
     return phone_pattern.match(phone) is not None
 
 # Telefon raqamini formatlash
@@ -225,9 +223,9 @@ def save_data(message):
 
     # Telefon raqamini aniqlaymiz
     if message.contact:
-        phone = message.contact.phone_number
+        phone = message.contact.phone_number  # Agar contact yuborilgan bo‘lsa, shundan foydalanamiz
     else:
-        phone = message.text
+        phone = message.text  # Yoki foydalanuvchi oddiy matn kiritgan bo‘lsa
 
     # Telefon raqami to‘g‘ri formatda ekanligini tekshiramiz
     formatted_phone = format_phone(phone)

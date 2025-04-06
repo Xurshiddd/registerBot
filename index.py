@@ -2,6 +2,7 @@ import telebot
 import os
 import sqlite3
 import pandas as pd
+import re
 import tuman  # tuman.py dan tumanlarni olish uchun
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -176,6 +177,11 @@ def ask_name(call):
     _, region, district, institution = call.data.split('_')
     bot.send_message(call.message.chat.id, "👤 Ism va familiyangizni kiriting:")
     bot.register_next_step_handler(call.message, ask_phone, region, district, institution) #
+def is_valid_phone(phone):
+    # Telefon raqamlaridagi maxsus belgilarni qo'llab-quvvatlash uchun regex
+    phone_pattern = re.compile(r'^\+?998\d{9}$')  # O'zbekistondagi telefon raqamiga moslashgan format
+    return phone_pattern.match(phone) is not None
+
 def ask_phone(message, region, district, institution):
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     contact_btn = KeyboardButton("📞 Telefon raqamni yuborish", request_contact=True)
@@ -192,11 +198,11 @@ def ask_phone(message, region, district, institution):
 
     bot.send_message(
         message.chat.id,
-        "📞 Telefon raqamingizni kiriting yoki Tugma orqali jo'nating:",
+        "📞 Telefon raqamingizni +998********* formatida kiriting yoki Tugma orqali jo'nating:",
         reply_markup=markup
     )
 
-# **Telefon raqamini kiritish**
+# Telefon raqamini tekshirib, saqlash
 @bot.message_handler(content_types=['contact', 'text'])
 def save_data(message):
     user = user_temp.get(message.chat.id)
@@ -208,6 +214,11 @@ def save_data(message):
         phone = message.contact.phone_number
     else:
         phone = message.text
+
+    # Telefon raqami to‘g‘ri formatda ekanligini tekshiramiz
+    if not is_valid_phone(phone):
+        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni to‘g‘ri kiriting +998******** formatida yoki Tugma orqali yuboring.")
+        return ask_phone(message, user["region"], user["district"], user["institution"])
 
     full_name = user["full_name"]
     region = user["region"]
@@ -234,7 +245,6 @@ def save_data(message):
 
     # vaqtinchalik ma'lumotni o‘chirib tashlaymiz
     user_temp.pop(message.chat.id, None)
-
 # **Admin panel**
 
 if __name__ == '__main__':

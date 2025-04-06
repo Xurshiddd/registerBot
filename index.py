@@ -9,6 +9,7 @@ TOKEN = '7822132896:AAEFk1MFTboOgwnBrwMTSvDCFFymaHUrpfM'
 CHANNEL_USERNAME = '@ttysi_uz'
 CHANNEL_USERNAME2 = '@eduuz'
 ADMIN_IDS = [629384737, 898426931]  # Bir nechta admin ID lar ro'yxati
+user_temp = {}
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -108,26 +109,64 @@ def ask_name(call):
     _, region, district, institution = call.data.split('_')
     bot.send_message(call.message.chat.id, "👤 Ism va familiyangizni kiriting:")
     bot.register_next_step_handler(call.message, ask_phone, region, district, institution) #
-
-# **Telefon raqamini kiritish**
 def ask_phone(message, region, district, institution):
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     contact_btn = KeyboardButton("📞 Telefon raqamni yuborish", request_contact=True)
     markup.add(contact_btn)
-    full_name = message.text
-    bot.send_message(message.chat.id, "📞 Telefon raqamingizni kiriting yoki Tugma orqali jo'nating:", reply_markup=markup)
-    bot.register_next_step_handler(message, save_data, full_name, region, district, institution)
 
-# **Ma'lumotlarni saqlash**
-def save_data(message, full_name, region, district, institution):
-    phone = message.text
+    full_name = message.text
+    # vaqtinchalik ma'lumotlarni saqlaymiz
+    user_temp[message.chat.id] = {
+        "full_name": full_name,
+        "region": region,
+        "district": district,
+        "institution": institution
+    }
+
+    bot.send_message(
+        message.chat.id,
+        "📞 Telefon raqamingizni kiriting yoki Tugma orqali jo'nating:",
+        reply_markup=markup
+    )
+
+# **Telefon raqamini kiritish**
+@bot.message_handler(content_types=['contact', 'text'])
+def save_data(message):
+    user = user_temp.get(message.chat.id)
+    if not user:
+        return  # Ma'lumotlar yo‘q bo‘lsa, chiqib ketamiz
+
+    # Telefon raqamini aniqlaymiz
+    if message.contact:
+        phone = message.contact.phone_number
+    else:
+        phone = message.text
+
+    full_name = user["full_name"]
+    region = user["region"]
+    district = user["district"]
+    institution = user["institution"]
+
+    # Bazaga saqlaymiz
     conn = sqlite3.connect("database.sqlite")
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO users (telegram_id, full_name, phone, region, district, institution) VALUES (?, ?, ?, ?, ?, ?)",
-                   (message.chat.id, full_name, phone, region, district, institution))
+    cursor.execute("""
+        INSERT INTO users (telegram_id, full_name, phone, region, district, institution)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (message.chat.id, full_name, phone, region, district, institution))
     conn.commit()
     conn.close()
-    bot.send_message(message.chat.id, "✅ Ma'lumotlaringiz saqlandi! \n Olimpiadaning birinchi bosqichi 8-aprel kuni soat 10:00 da bo'lib o'tadi. \nQo'shimcha savollar yuzasidan hududiy mas'ullar bilan bog'lanishingiz mumkin.",reply_markup=send_buttons())
+
+    # Foydalanuvchiga xabar
+    bot.send_message(
+        message.chat.id,
+        "✅ Ma'lumotlaringiz saqlandi! \n\n🗓 Olimpiadaning birinchi bosqichi *8-aprel* kuni soat *10:00* da bo‘lib o‘tadi.\n\nQo‘shimcha savollar uchun hududiy mas’ullarga murojaat qiling.",
+        parse_mode="Markdown",
+        reply_markup=send_buttons()
+    )
+
+    # vaqtinchalik ma'lumotni o‘chirib tashlaymiz
+    user_temp.pop(message.chat.id, None)
 
 # **Admin panel**
 @bot.message_handler(commands=['admin'])

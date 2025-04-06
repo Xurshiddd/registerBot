@@ -5,7 +5,7 @@ import pandas as pd
 import tuman  # tuman.py dan tumanlarni olish uchun
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
-TOKEN = '7822132896:AAH7xchOGpgsO3ZWc7lP7iZCd0SB-iq7ZNY'
+TOKEN = '7822132896:AAEFk1MFTboOgwnBrwMTSvDCFFymaHUrpfM'
 CHANNEL_USERNAME = '@ttysi_uz'
 CHANNEL_USERNAME2 = '@eduuz'
 ADMIN_IDS = [629384737, 898426931]  # Bir nechta admin ID lar ro'yxati

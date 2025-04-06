@@ -184,14 +184,15 @@ def is_valid_phone(phone):
 
 # Telefon raqamini formatlash
 def format_phone(phone):
-    # Bo'sh joylarni olib tashlaymiz
+    # Telefon raqamini bo'sh joylardan tozalash
     phone = phone.replace(" ", "")
     
-    # Agar foydalanuvchi raqamni +998 bilan kiritmasa, biz uni qo‘shimcha qilib formatlaymiz
-    if phone.startswith('97') and len(phone) == 9:
-        return '+998' + phone
-    elif phone.startswith('+998') and len(phone) == 13:
+    # Agar telefon raqami +998 bilan boshlasa va 13 ta raqam bo'lsa
+    if phone.startswith('+998') and len(phone) == 13:
         return phone
+    # Agar telefon raqami 97 bilan boshlasa va 9 ta raqam bo'lsa
+    elif len(phone) == 9:
+        return '+998' + phone
     else:
         return None  # Agar format noto‘g‘ri bo‘lsa, None qaytaramiz
 
@@ -215,7 +216,6 @@ def ask_phone(message, region, district, institution):
         reply_markup=markup
     )
 
-# Telefon raqamini tekshirib, saqlash
 @bot.message_handler(content_types=['contact'])
 def save_data_from_button(message):
     user = user_temp.get(message.chat.id)
@@ -224,7 +224,7 @@ def save_data_from_button(message):
 
     # Button orqali kelgan telefon raqami
     phone = message.contact.phone_number
-
+    
     # Agar telefon raqami bo'sh bo'lsa, xatolik yuborish
     if not phone:
         bot.send_message(message.chat.id, "❌ Telefon raqamingizni yuboring.")
@@ -261,7 +261,7 @@ def save_data_from_button(message):
     )
 
     # vaqtinchalik ma'lumotni o‘chirib tashlaymiz
-    user_temp.pop(message.chat.id, None)# Telefon raqami kiritilganida tekshiradi (faqat text orqali)
+    user_temp.pop(message.chat.id, None)
 @bot.message_handler(func=lambda message: True)
 def save_data_from_text(message):
     user = user_temp.get(message.chat.id)

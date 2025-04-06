@@ -188,8 +188,10 @@ def format_phone(phone):
     phone = phone.replace(" ", "")
     
     # Agar telefon raqami +998 bilan boshlasa va 13 ta raqam bo'lsa
-    if phone.startswith('+998') and len(phone) == 13 or phone.startswith('998') and len(phone) == 12:
+    if phone.startswith('+998') and len(phone) == 13:
         return phone
+    elif phone.startswith('998') and len(phone) == 12:
+        return '+' + phone
     # Agar telefon raqami 97 bilan boshlasa va 9 ta raqam bo'lsa
     elif len(phone) == 9:
         return '+998' + phone
@@ -212,7 +214,7 @@ def ask_phone(message, region, district, institution):
 
     bot.send_message(
         message.chat.id,
-        "📞 Telefon raqamingizni kiriting yoki Tugma orqali jo'nating:",
+        "📞 Telefon raqamingizni *998********* formatida kiriting yoki Tugma orqali jo'nating:",
         reply_markup=markup
     )
 
@@ -234,7 +236,7 @@ def save_data_from_button(message):
     formatted_phone = format_phone(phone)
     
     if not formatted_phone:
-        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni to‘g‘ri yuboring.")
+        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni *998********* formatida yuboring.")
         return ask_phone(message, user["region"], user["district"], user["institution"])
 
     full_name = user["full_name"]
@@ -279,7 +281,7 @@ def save_data_from_text(message):
     formatted_phone = format_phone(phone)
     
     if not formatted_phone:
-        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni to‘g‘ri kiriting yoki Tugma orqali yuboring.")
+        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni *998********* formatida kiriting yoki Tugma orqali yuboring.")
         return ask_phone(message, user["region"], user["district"], user["institution"])
 
     full_name = user["full_name"]

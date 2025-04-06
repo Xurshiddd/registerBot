@@ -111,8 +111,11 @@ def ask_name(call):
 
 # **Telefon raqamini kiritish**
 def ask_phone(message, region, district, institution):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    contact_btn = KeyboardButton("📞 Telefon raqamni yuborish", request_contact=True)
+    markup.add(contact_btn)
     full_name = message.text
-    bot.send_message(message.chat.id, "📞 Telefon raqamingizni kiriting:")
+    bot.send_message(message.chat.id, "📞 Telefon raqamingizni kiriting yoki Tugma orqali jo'nating:", reply_markup=markup)
     bot.register_next_step_handler(message, save_data, full_name, region, district, institution)
 
 # **Ma'lumotlarni saqlash**

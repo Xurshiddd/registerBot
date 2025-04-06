@@ -185,12 +185,21 @@ def is_valid_phone(phone):
     return phone_pattern.match(phone) is not None
 
 # Telefon raqamini formatlash
+import re
+
+# Telefon raqami formatini tekshirish
+def is_valid_phone(phone):
+    # Telefon raqami uchun umumiy regex (O'zbekistondagi raqamlar uchun)
+    phone_pattern = re.compile(r'^\+998\d{9}$')  # O'zbekistondagi telefon raqamiga moslashgan format
+    return phone_pattern.match(phone) is not None
+
+# Telefon raqamini formatlash
 def format_phone(phone):
     # Bo'sh joylarni olib tashlaymiz
     phone = phone.replace(" ", "")
     
     # Agar foydalanuvchi raqamni +998 bilan kiritmasa, biz uni qo‘shimcha qilib formatlaymiz
-    if len(phone) == 9:
+    if phone.startswith('97') and len(phone) == 9:
         return '+998' + phone
     elif phone.startswith('+998') and len(phone) == 13:
         return phone
@@ -213,7 +222,7 @@ def ask_phone(message, region, district, institution):
 
     bot.send_message(
         message.chat.id,
-        "📞 Telefon raqamingizni +998********* formatida kiriting yoki Tugma orqali jo'nating:",
+        "📞 Telefon raqamingizni kiriting yoki Tugma orqali jo'nating:",
         reply_markup=markup
     )
 
@@ -234,7 +243,7 @@ def save_data(message):
     formatted_phone = format_phone(phone)
     
     if not formatted_phone:
-        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni +998********* formatida kiriting yoki Tugma orqali yuboring.")
+        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni to‘g‘ri kiriting yoki Tugma orqali yuboring.")
         return ask_phone(message, user["region"], user["district"], user["institution"])
 
     full_name = user["full_name"]
@@ -262,6 +271,7 @@ def save_data(message):
 
     # vaqtinchalik ma'lumotni o‘chirib tashlaymiz
     user_temp.pop(message.chat.id, None)
+
 
 if __name__ == '__main__':
     init_db()

@@ -188,7 +188,7 @@ def format_phone(phone):
     phone = phone.replace(" ", "")
     
     # Agar telefon raqami +998 bilan boshlasa va 13 ta raqam bo'lsa
-    if phone.startswith('+998') and len(phone) == 13:
+    if phone.startswith('+998') and len(phone) == 13 or phone.startswith('998') and len(phone) == 12:
         return phone
     # Agar telefon raqami 97 bilan boshlasa va 9 ta raqam bo'lsa
     elif len(phone) == 9:

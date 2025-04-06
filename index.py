@@ -178,11 +178,7 @@ def ask_name(call):
     bot.send_message(call.message.chat.id, "👤 Ism va familiyangizni kiriting:")
     bot.register_next_step_handler(call.message, ask_phone, region, district, institution) #
 
-# Telefon raqami formatini tekshirish
-def is_valid_phone(phone):
-    # Telefon raqami uchun umumiy regex (O'zbekistondagi raqamlar uchun)
-    phone_pattern = re.compile(r'^\+998\d{9}$')  # O'zbekistondagi telefon raqamiga moslashgan format
-    return phone_pattern.match(phone) is not None
+import re
 
 # Telefon raqami formatini tekshirish
 def is_valid_phone(phone):
@@ -196,7 +192,7 @@ def format_phone(phone):
     phone = phone.replace(" ", "")
     
     # Agar foydalanuvchi raqamni +998 bilan kiritmasa, biz uni qo‘shimcha qilib formatlaymiz
-    if len(phone) == 9:
+    if phone.startswith('97') and len(phone) == 9:
         return '+998' + phone
     elif phone.startswith('+998') and len(phone) == 13:
         return phone
@@ -219,7 +215,7 @@ def ask_phone(message, region, district, institution):
 
     bot.send_message(
         message.chat.id,
-        "📞 Telefon raqamingizni +998********* formatida kiriting yoki Tugma orqali jo'nating:",
+        "📞 Telefon raqamingizni kiriting yoki Tugma orqali jo'nating:",
         reply_markup=markup
     )
 
@@ -233,54 +229,16 @@ def save_data_from_button(message):
     # Button orqali kelgan telefon raqami
     phone = message.contact.phone_number
 
+    # Agar telefon raqami bo'sh bo'lsa, xatolik yuborish
+    if not phone:
+        bot.send_message(message.chat.id, "❌ Telefon raqamingizni yuboring.")
+        return ask_phone(message, user["region"], user["district"], user["institution"])
+
     # Telefonni saqlaymiz
     formatted_phone = format_phone(phone)
     
-    full_name = user["full_name"]
-    region = user["region"]
-    district = user["district"]
-    institution = user["institution"]
-
-    # Bazaga saqlaymiz
-    conn = sqlite3.connect("database.sqlite")
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO users (telegram_id, full_name, phone, region, district, institution)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (message.chat.id, full_name, formatted_phone, region, district, institution))
-    conn.commit()
-    conn.close()
-
-    # Foydalanuvchiga xabar
-    bot.send_message(
-        message.chat.id,
-        "✅ Ma'lumotlaringiz saqlandi! \n\n🗓 Olimpiadaning birinchi bosqichi *8-aprel* kuni soat *10:00* da bo‘lib o‘tadi.\n\nQo‘shimcha savollar uchun hududiy mas’ullarga murojaat qiling.",
-        parse_mode="Markdown",
-        reply_markup=send_buttons()
-    )
-
-    # vaqtinchalik ma'lumotni o‘chirib tashlaymiz
-    user_temp.pop(message.chat.id, None)
-
-# Telefon raqami kiritilganida tekshiradi (faqat text orqali)
-@bot.message_handler(func=lambda message: True)
-def save_data_from_text(message):
-    user = user_temp.get(message.chat.id)
-    if not user:
-        return  # Ma'lumotlar yo‘q bo‘lsa, chiqib ketamiz
-
-    # Foydalanuvchi telefon raqamini text sifatida kiritdi
-    phone = message.text
-
-    # Agar raqam button orqali kelgan bo'lsa, uni tekshirishdan o‘tkazmaymiz
-    if message.contact:
-        return  # Agar contact yuborilgan bo‘lsa, faqat button handler ishlaydi
-
-    # Telefonni formatlash va tekshirish
-    formatted_phone = format_phone(phone)
-    
     if not formatted_phone:
-        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni +998********* formatida kiriting yoki Tugma orqali yuboring.")
+        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni to‘g‘ri yuboring.")
         return ask_phone(message, user["region"], user["district"], user["institution"])
 
     full_name = user["full_name"]
@@ -308,7 +266,6 @@ def save_data_from_text(message):
 
     # vaqtinchalik ma'lumotni o‘chirib tashlaymiz
     user_temp.pop(message.chat.id, None)
-
 
 if __name__ == '__main__':
     init_db()

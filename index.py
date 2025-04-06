@@ -51,12 +51,12 @@ def check_subscription(message):
         return
     
     try:
-        bot.send_message(message.chat.id, "keyboard", reply_markup=send_buttons())
+        # bot.send_message(message.chat.id, "keyboard", reply_markup=send_buttons())
         user_status = bot.get_chat_member(CHANNEL_USERNAME, message.chat.id).status
         # user_stat = bot.get_chat_member(CHANNEL_USERNAME2, message.chat.id).status  & user_stat in ['member', 'administrator', 'creator']
         if user_status in ['member', 'administrator', 'creator']:
             ask_region(message)
-            bot.send_message(message.chat.id, "Quyidagi menyudan tanlang:", reply_markup=send_buttons())
+            # bot.send_message(message.chat.id, "Quyidagi menyudan tanlang:", reply_markup=send_buttons())
         else:
             markup = InlineKeyboardMarkup()
             markup.add(InlineKeyboardButton("✅ A'zo bo'lish", url=f"https://t.me/{CHANNEL_USERNAME[1:]}"))
@@ -124,7 +124,7 @@ def save_data(message, full_name, region, district, institution):
                    (message.chat.id, full_name, phone, region, district, institution))
     conn.commit()
     conn.close()
-    bot.send_message(message.chat.id, "✅ Ma'lumotlaringiz saqlandi! \n Olimpiadaning birinchi bosqichi 8-aprel kuni soat 10:00 da bo'lib o'tadi. \nQo'shimcha savollar yuzasidan hududiy mas'ullar bilan bog'lanishingiz mumkin.")
+    bot.send_message(message.chat.id, "✅ Ma'lumotlaringiz saqlandi! \n Olimpiadaning birinchi bosqichi 8-aprel kuni soat 10:00 da bo'lib o'tadi. \nQo'shimcha savollar yuzasidan hududiy mas'ullar bilan bog'lanishingiz mumkin.",reply_markup=send_buttons())
 
 # **Admin panel**
 @bot.message_handler(commands=['admin'])

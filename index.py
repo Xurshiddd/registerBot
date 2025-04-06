@@ -196,7 +196,7 @@ def format_phone(phone):
     phone = phone.replace(" ", "")
     
     # Agar foydalanuvchi raqamni +998 bilan kiritmasa, biz uni qo‘shimcha qilib formatlaymiz
-    if phone.startswith('97') and len(phone) == 9:
+    if len(phone) == 9:
         return '+998' + phone
     elif phone.startswith('+998') and len(phone) == 13:
         return phone

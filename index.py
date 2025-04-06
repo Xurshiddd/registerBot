@@ -177,10 +177,21 @@ def ask_name(call):
     _, region, district, institution = call.data.split('_')
     bot.send_message(call.message.chat.id, "👤 Ism va familiyangizni kiriting:")
     bot.register_next_step_handler(call.message, ask_phone, region, district, institution) #
+# Telefon raqami formatini tekshirish
 def is_valid_phone(phone):
-    # Telefon raqamlaridagi maxsus belgilarni qo'llab-quvvatlash uchun regex
+    # Telefon raqami uchun umumiy regex (O'zbekistondagi raqamlar uchun)
     phone_pattern = re.compile(r'^\+?998\d{9}$')  # O'zbekistondagi telefon raqamiga moslashgan format
     return phone_pattern.match(phone) is not None
+
+# Telefon raqamini formatlash
+def format_phone(phone):
+    # Agar foydalanuvchi raqamni +998 bilan kiritmasa, biz uni qo‘shimcha qilib formatlaymiz
+    if len(phone) == 9:
+        return '+998' + phone
+    elif phone.startswith('+998') and len(phone) == 13:
+        return phone
+    else:
+        return None  # Agar format noto‘g‘ri bo‘lsa, None qaytaramiz
 
 def ask_phone(message, region, district, institution):
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -216,8 +227,10 @@ def save_data(message):
         phone = message.text
 
     # Telefon raqami to‘g‘ri formatda ekanligini tekshiramiz
-    if not is_valid_phone(phone):
-        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni to‘g‘ri kiriting +998******** formatida yoki Tugma orqali yuboring.")
+    formatted_phone = format_phone(phone)
+    
+    if not formatted_phone:
+        bot.send_message(message.chat.id, "❌ Telefon raqami noto‘g‘ri formatda. Iltimos, raqamni +998********* formatida kiriting yoki Tugma orqali yuboring.")
         return ask_phone(message, user["region"], user["district"], user["institution"])
 
     full_name = user["full_name"]
@@ -231,7 +244,7 @@ def save_data(message):
     cursor.execute("""
         INSERT INTO users (telegram_id, full_name, phone, region, district, institution)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (message.chat.id, full_name, phone, region, district, institution))
+    """, (message.chat.id, full_name, formatted_phone, region, district, institution))
     conn.commit()
     conn.close()
 
@@ -245,6 +258,7 @@ def save_data(message):
 
     # vaqtinchalik ma'lumotni o‘chirib tashlaymiz
     user_temp.pop(message.chat.id, None)
+
 # **Admin panel**
 
 if __name__ == '__main__':

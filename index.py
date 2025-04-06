@@ -29,6 +29,7 @@ def init_db():
     conn.close()
 
 # **Userni ro‘yxatdan o‘tganligini tekshirish**
+
 def is_registered(user_id):
     conn = sqlite3.connect("database.sqlite")
     cursor = conn.cursor()
@@ -45,6 +46,72 @@ def send_buttons():
     markup.add(KeyboardButton("Biz bilan bog'lanish"))
     return markup
 # **Start command**
+@bot.message_handler(commands=['admin'])
+def admin_panel(message):
+    if message.chat.id in ADMIN_IDS:
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("📥 Ma'lumotlarni yuklash", callback_data='download_data'))
+        bot.send_message(message.chat.id, "📊 Admin paneliga xush kelibsiz!", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data == 'download_data')
+def download_data(call):
+    if call.message.chat.id not in ADMIN_IDS:
+        bot.answer_callback_query(call.id, "❌ Siz admin emassiz!")
+        return
+
+    conn = sqlite3.connect("database.sqlite")
+    df = pd.read_sql_query("SELECT * FROM users", conn)
+    conn.close()
+    
+    file_path = "users_data.xlsx"
+    df.to_excel(file_path, index=False)
+
+    with open(file_path, 'rb') as file:
+        bot.send_document(call.message.chat.id, file)
+    os.remove(file_path)
+
+# **Tugmalarga tegishli handlerlar**
+@bot.message_handler(func=lambda message: message.text == "Olimpiada nizomi")
+def send_regulations(message):
+    with open("nizom.pdf", 'rb') as file:
+        bot.send_document(message.chat.id, file)
+
+
+
+contacts = {
+    "Qoraqalpog‘iston Respublikasi": "Mavlyanov Aybek Palvanbayevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 88-008-82-01",
+    "Andijon viloyati": "Axmedov Jaxongir Adxamovich - ishchi guruh rahbari, Professor\n☎ 93-591-44-22",
+    "Buxoro viloyati": "Arabov Jamoliddin Sadriddinovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 97-441-41-71",
+    "Jizzax viloyati": "Xazratkulov Xamidjon Alikulovich - ishchi guruh rahbari, Bo‘lim boshlig‘i\n☎ 90-357-06-65",
+    "Qashqadaryo viloyati": "Mansurov Mansur Alisherovich - ishchi guruh rahbari, Dekan\n☎ 98-128-33-28",
+    "Navoiy viloyati": "Eshnazarov Dilshod Azamatovich - ishchi guruh rahbari, Assistent\n☎ 94-627-25-93",
+    "Namangan viloyati": "Kadirov Oman Xamidovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 99-307-77-63",
+    "Samarqand viloyati": "Ulukmuradov Abror Nafasovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 97-490-30-72, 98-001-14-72",
+    "Surxondaryo viloyati": "Rasulov Hamza Yuldoshevich - ishchi guruh rahbari, Dotsent\n☎ 90-988-79-63",
+    "Sirdaryo viloyati": "Davlyatov Bekzodjon Aslanxojayevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 94-656-82-01",
+    "Toshkent viloyati>": "Ortiqov Oybek Akbaraliyevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 90-806-59-37",
+    "Farg‘ona viloyati": "Tuychiyev Timur Ortikovich - ishchi guruh rahbari, Dotsent\n☎ 97-747-34-06",
+    "Xorazm viloyati": "Ruzmetov Mansurbek Erkinovich - ishchi guruh rahbari, Dekan\n☎ 90-984-20-18",
+    "Toshkent shahri": "Patxullayev Sarvarjon Ubaydulla o‘g‘li - ishchi guruh rahbari, Dekan\n☎ 90-325-06-06"
+}
+
+@bot.message_handler(func=lambda message: message.text == "Hududiy mas'ullar telefon raqami")
+def send_regions(message):
+    markup = InlineKeyboardMarkup(row_width=2)
+    buttons = [InlineKeyboardButton(text=region, callback_data=region) for region in contacts]
+    markup.add(*buttons)
+    bot.send_message(message.chat.id, "Viloyatni tanlang:", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data in contacts)
+def send_contact(call):
+    contact_info = f"📍 <b>{call.data}</b>\n{contacts[call.data]}"
+    bot.send_message(call.message.chat.id, contact_info, parse_mode="HTML")
+    bot.answer_callback_query(call.id)
+
+@bot.message_handler(func=lambda message: message.text == "Biz bilan bog'lanish")
+def send_contact_number(message):
+    bot.send_message(message.chat.id, "📞 +998555127000")
+
 @bot.message_handler(commands=['start'])
 def check_subscription(message):
     if is_registered(message.chat.id):
@@ -169,71 +236,6 @@ def save_data(message):
     user_temp.pop(message.chat.id, None)
 
 # **Admin panel**
-@bot.message_handler(commands=['admin'])
-def admin_panel(message):
-    if message.chat.id in ADMIN_IDS:
-        markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("📥 Ma'lumotlarni yuklash", callback_data='download_data'))
-        bot.send_message(message.chat.id, "📊 Admin paneliga xush kelibsiz!", reply_markup=markup)
-
-@bot.callback_query_handler(func=lambda call: call.data == 'download_data')
-def download_data(call):
-    if call.message.chat.id not in ADMIN_IDS:
-        bot.answer_callback_query(call.id, "❌ Siz admin emassiz!")
-        return
-
-    conn = sqlite3.connect("database.sqlite")
-    df = pd.read_sql_query("SELECT * FROM users", conn)
-    conn.close()
-    
-    file_path = "users_data.xlsx"
-    df.to_excel(file_path, index=False)
-
-    with open(file_path, 'rb') as file:
-        bot.send_document(call.message.chat.id, file)
-    os.remove(file_path)
-
-# **Tugmalarga tegishli handlerlar**
-@bot.message_handler(func=lambda message: message.text == "Olimpiada nizomi")
-def send_regulations(message):
-    with open("nizom.pdf", 'rb') as file:
-        bot.send_document(message.chat.id, file)
-
-
-
-contacts = {
-    "Qoraqalpog‘iston Respublikasi": "Mavlyanov Aybek Palvanbayevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 88-008-82-01",
-    "Andijon viloyati": "Axmedov Jaxongir Adxamovich - ishchi guruh rahbari, Professor\n☎ 93-591-44-22",
-    "Buxoro viloyati": "Arabov Jamoliddin Sadriddinovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 97-441-41-71",
-    "Jizzax viloyati": "Xazratkulov Xamidjon Alikulovich - ishchi guruh rahbari, Bo‘lim boshlig‘i\n☎ 90-357-06-65",
-    "Qashqadaryo viloyati": "Mansurov Mansur Alisherovich - ishchi guruh rahbari, Dekan\n☎ 98-128-33-28",
-    "Navoiy viloyati": "Eshnazarov Dilshod Azamatovich - ishchi guruh rahbari, Assistent\n☎ 94-627-25-93",
-    "Namangan viloyati": "Kadirov Oman Xamidovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 99-307-77-63",
-    "Samarqand viloyati": "Ulukmuradov Abror Nafasovich - ishchi guruh rahbari, Kafedra mudiri\n☎ 97-490-30-72, 98-001-14-72",
-    "Surxondaryo viloyati": "Rasulov Hamza Yuldoshevich - ishchi guruh rahbari, Dotsent\n☎ 90-988-79-63",
-    "Sirdaryo viloyati": "Davlyatov Bekzodjon Aslanxojayevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 94-656-82-01",
-    "Toshkent viloyati>": "Ortiqov Oybek Akbaraliyevich - ishchi guruh rahbari, Kafedra mudiri\n☎ 90-806-59-37",
-    "Farg‘ona viloyati": "Tuychiyev Timur Ortikovich - ishchi guruh rahbari, Dotsent\n☎ 97-747-34-06",
-    "Xorazm viloyati": "Ruzmetov Mansurbek Erkinovich - ishchi guruh rahbari, Dekan\n☎ 90-984-20-18",
-    "Toshkent shahri": "Patxullayev Sarvarjon Ubaydulla o‘g‘li - ishchi guruh rahbari, Dekan\n☎ 90-325-06-06"
-}
-
-@bot.message_handler(func=lambda message: message.text == "Hududiy mas'ullar telefon raqami")
-def send_regions(message):
-    markup = InlineKeyboardMarkup(row_width=2)
-    buttons = [InlineKeyboardButton(text=region, callback_data=region) for region in contacts]
-    markup.add(*buttons)
-    bot.send_message(message.chat.id, "Viloyatni tanlang:", reply_markup=markup)
-
-@bot.callback_query_handler(func=lambda call: call.data in contacts)
-def send_contact(call):
-    contact_info = f"📍 <b>{call.data}</b>\n{contacts[call.data]}"
-    bot.send_message(call.message.chat.id, contact_info, parse_mode="HTML")
-    bot.answer_callback_query(call.id)
-
-@bot.message_handler(func=lambda message: message.text == "Biz bilan bog'lanish")
-def send_contact_number(message):
-    bot.send_message(message.chat.id, "📞 +998555127000")
 
 if __name__ == '__main__':
     init_db()
